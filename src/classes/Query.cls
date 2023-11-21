@@ -1523,6 +1523,16 @@ public class Query {
         return enforceSecurity(true);
     }
 
+    public Query enforseSObjectAccessDecision() {
+        return enforseSObjectAccessDecision(true, AccessType.READABLE);
+    }
+
+    public Query enforseSObjectAccessDecision(Boolean enforce, System.AccessType accessCheckType) {
+        this.sObjectAccessDecisionEnforced = enforce;
+        this.accessCheckType = accessCheckType;
+        return this;
+    }
+
     public String toQueryString() {
         String rawString = formQueryStringPreformat();
 
@@ -1580,7 +1590,14 @@ public class Query {
 
     public List<SObject> toSObjectList() {
         String queryString = formQueryString();
-        return Database.query(queryString);
+        List<SObject> dbResp = Database.query(queryString);
+
+        if (sObjectAccessDecisionEnforced == true) {
+            SObjectAccessDecision securityDecision = Security.stripInaccessible(this.accessCheckType, dbResp);
+            return securityDecision.getRecords();
+        }
+
+        return dbResp;
     }
 
     public List<AggregateResult> aggregate() {
@@ -2445,6 +2462,8 @@ public class Query {
 
     private static Boolean securityEnforcedGlobal = false;
     private Boolean securityEnforced = null;
+    private Boolean sObjectAccessDecisionEnforced = null;
+    private System.AccessType accessCheckType = AccessType.READABLE;
 
     private String namespace = getNamespaceFromClass();
 
