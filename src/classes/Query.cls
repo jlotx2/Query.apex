@@ -95,8 +95,11 @@ public class Query {
         }
     }
 
+    private final String sObjectFieldTemplate = '{0}.{1}';
+
     public Query selectFields(Schema.SObjectField field) {
-        return selectField(field.getDescribe().getName());
+        Object[] templateReplacements = new Object[]{field.getDescribe().getSObjectType().getDescribe().getName(),field.getDescribe().getName()};
+        return selectField(String.format(sObjectFieldTemplate,templateReplacements));
     }
 
     public Query selectFields(Set<Schema.SObjectField> fields) {
@@ -106,7 +109,8 @@ public class Query {
     public Query selectFields(List<Schema.SObjectField> fields) {
         List<String> fieldStrings = new List<String>();
         for (Schema.SObjectField field : fields) {
-            fieldStrings.add(field.getDescribe().getName());
+            Object[] templateReplacements = new Object[]{field.getDescribe().getSObjectType().getDescribe().getName(),field.getDescribe().getName()};
+            fieldStrings.add(String.format(sObjectFieldTemplate,templateReplacements));
         }
         return selectFields(fieldStrings);
     }
